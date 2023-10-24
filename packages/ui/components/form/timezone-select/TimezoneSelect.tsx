@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { ITimezoneOption, ITimezone, Props as SelectProps } from "react-timezone-select";
-import BaseSelect, { allTimezones } from "react-timezone-select";
+import BaseSelect from "react-timezone-select";
 
 import { classNames } from "@calcom/lib";
 import { filterByCities, addCitiesToDropdown, handleOptionLabel } from "@calcom/lib/timezone";
@@ -18,6 +18,7 @@ export function TimezoneSelect({
   classNames: timezoneClassNames,
   components,
   variant = "default",
+  value,
   ...props
 }: SelectProps & { variant?: "default" | "minimal" }) {
   const [cities, setCities] = useState<ICity[]>([]);
@@ -36,18 +37,20 @@ export function TimezoneSelect({
 
   return (
     <BaseSelect
+      value={value}
       className={className}
       isLoading={isLoading}
       isDisabled={isLoading}
       {...reactSelectProps}
       timezones={{
-        ...allTimezones,
+        ...(data ? addCitiesToDropdown(data) : {}),
         ...addCitiesToDropdown(cities),
-        "America/Asuncion": "Asuncion",
       }}
       onInputChange={handleInputChange}
       {...props}
-      formatOptionLabel={(option) => <p className="truncate">{(option as ITimezoneOption).value}</p>}
+      formatOptionLabel={(option) => (
+        <p className="truncate">{(option as ITimezoneOption).value.replace(/_/g, " ")}</p>
+      )}
       getOptionLabel={(option) => handleOptionLabel(option as ITimezoneOption, cities)}
       classNames={{
         ...timezoneClassNames,

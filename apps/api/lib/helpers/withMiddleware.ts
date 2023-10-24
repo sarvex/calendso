@@ -12,26 +12,40 @@ import {
   HTTP_GET_OR_POST,
   HTTP_GET_DELETE_PATCH,
 } from "./httpMethods";
+import { rateLimitApiKey } from "./rateLimitApiKey";
 import { verifyApiKey } from "./verifyApiKey";
 import { withPagination } from "./withPagination";
 
-const withMiddleware = label(
-  {
-    HTTP_GET_OR_POST,
-    HTTP_GET_DELETE_PATCH,
-    HTTP_GET,
-    HTTP_PATCH,
-    HTTP_POST,
-    HTTP_DELETE,
-    addRequestId,
-    verifyApiKey,
-    customPrismaClient,
-    extendRequest,
-    pagination: withPagination,
-    sentry: captureErrors,
-  },
-  // The order here, determines the order of execution, put customPrismaClient before verifyApiKey always.
-  ["extendRequest", "sentry", "customPrismaClient", "verifyApiKey", "addRequestId"] // <-- Provide a list of middleware to call automatically
-);
+const middleware = {
+  HTTP_GET_OR_POST,
+  HTTP_GET_DELETE_PATCH,
+  HTTP_GET,
+  HTTP_PATCH,
+  HTTP_POST,
+  HTTP_DELETE,
+  addRequestId,
+  verifyApiKey,
+  rateLimitApiKey,
+  customPrismaClient,
+  extendRequest,
+  pagination: withPagination,
+  captureErrors,
+};
 
-export { withMiddleware };
+type Middleware = keyof typeof middleware;
+
+const middlewareOrder =
+  // The order here, determines the order of execution
+  [
+    "extendRequest",
+    "captureErrors",
+    // - Put customPrismaClient before verifyApiKey always.
+    "customPrismaClient",
+    "verifyApiKey",
+    "rateLimitApiKey",
+    "addRequestId",
+  ] as Middleware[]; // <-- Provide a list of middleware to call automatically
+
+const withMiddleware = label(middleware, middlewareOrder);
+
+export { withMiddleware, middleware, middlewareOrder };

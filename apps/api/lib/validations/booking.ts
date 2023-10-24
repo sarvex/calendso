@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { _BookingModel as Booking, _AttendeeModel, _UserModel } from "@calcom/prisma/zod";
+import { _BookingModel as Booking, _AttendeeModel, _UserModel, _PaymentModel } from "@calcom/prisma/zod";
 import { extendedBookingCreateBody, iso8601 } from "@calcom/prisma/zod-utils";
 
 import { schemaQueryUserId } from "./shared/queryUserId";
@@ -49,6 +49,16 @@ export const schemaBookingReadPublic = Booking.extend({
       locale: true,
     })
     .optional(),
+  payment: z
+    .array(
+      _PaymentModel.pick({
+        id: true,
+        success: true,
+        paymentOption: true,
+      })
+    )
+    .optional(),
+  responses: z.record(z.any()).nullable(),
 }).pick({
   id: true,
   userId: true,
@@ -61,6 +71,7 @@ export const schemaBookingReadPublic = Booking.extend({
   timeZone: true,
   attendees: true,
   user: true,
+  payment: true,
   metadata: true,
   status: true,
   responses: true,
